@@ -1,0 +1,9 @@
+.out
+.env
+*.log
+.vscode
+*.secret
+.idea
+.DS_Store
+.vagrant
+.txt

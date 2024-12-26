@@ -1,0 +1,29 @@
+groups:
+  - name: Basic
+    rules:
+      - alert: PrometheusTargetMissing
+        expr: "up == 0"
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: Prometheus target missing (instance {{ $labels.instance }})
+          description: "A Prometheus target has disappeared. An exporter might be crashed.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+  - name: prometheus_alerts
+    rules:
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus down"
+          description: "Prometheus has been down for more than 1 minute."
+      - alert: PrometheusDroppedAlerts
+        expr: prometheus_notifications_dropped_total{job="prometheus"} > 0
+        for: 10s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus dropped alerts"
+          description: "Prometheus dropped {{ $value }} alerts in last 10 seconds."

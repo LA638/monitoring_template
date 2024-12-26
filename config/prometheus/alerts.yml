@@ -1,0 +1,90 @@
+groups:
+  - name: infra
+    interval: 15s
+    concurrency: 10
+    rules:
+      - alert: Provider1BalanceWarning
+        expr: 100 <= provider1_balance{job="telegraf"} < 1000
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          dashboard: "http://mon.company.name:3000/d/EDgjOjZIk/balances"
+          summary: "Баланс Provider1 меньше 1000 руб.!"
+          description: "Текущий баланс Provider1 = {{ $value }} руб."
+
+      - alert: Provider1BalanceCritical
+        expr: provider1_balance{job="telegraf"} < 100
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          dashboard: "http://mon.company.name:3000/d/EDgjOjZIk/balances"
+          summary: "Баланс Provider1 меньше 100 руб.!"
+          description: "Текущий баланс Provider1 = {{ $value }} руб."
+
+      - alert: Provider2BalanceWarning
+        expr: 100 <= provider2_balances_values_sum{job="telegraf"} / 100 < 1000
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          dashboard: "http://mon.company.name:3000/d/EDgjOjZIk/balances"
+          summary: "Баланс Provider2 меньше 1000 руб.!"
+          description: "Текущий баланс Provider2 = {{ $value }} руб."
+
+      - alert: Provider2BalanceCritical
+        expr: provider2_balances_values_sum{job="telegraf"} / 100 < 100
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          dashboard: "http://mon.company.name:3000/d/EDgjOjZIk/balances"
+          summary: "Баланс Provider2 меньше 100 руб.!"
+          description: "Текущий баланс Provider2 = {{ $value }} руб."
+
+      - alert: FreeDiskSpaceLess2GB
+        expr: round(node_filesystem_avail_bytes{device!~"rootfs",fstype!~"tmpfs|fuse.lxcfs",mountpoint!~"/home"}/1024/1024/1024, 0.001) < 2
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Свободного места на диске осталось менее 2 ГБ"
+          description: "На {{ $labels.instance }}{{ $labels.mountpoint }} осталось свободно {{ $value }} ГБ"
+
+      - alert: PostgresUnavailable
+        expr: PostgresPort_result_code{server="pg.company.name"} != 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Postgresql на сервере {{ $labels.server }} не доступен"
+          description: "Результат проверки порта {{ $labels.port }}: {{ $labels.result }}"
+
+      - alert: HttpResponseFailure
+        expr: http_response_http_response_code <= 199 OR http_response_http_response_code >= 400
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "HTTP {{ $labels.result }} on {{ $labels.server }}"
+          description: "HTTP status code is {{ $labels.status_code }}"
+
+      - alert: TargetMissing
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Instance {{ $labels.instance }} has disappeared.
+          description: "An exporter might be crashed. UP = {{ $value }}, job = {{ $labels.job }}"
+
+
+      - alert: SSLCertificateExpiringSoon
+        expr: (x509_cert_expiry < 1296000)
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SSL certificate for {{ $labels.common_name }} is expiring in less than 15 days."
+          description: "The SSL certificate for {{ $labels.common_name }} (instance: {{ $labels.instance }}) will expire in {{ $value | humanizeDuration }}. Please renew the certificate to avoid any service disruption."

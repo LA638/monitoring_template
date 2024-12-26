@@ -1,0 +1,69 @@
+global:
+  resolve_timeout: 5m
+  smtp_from: 'monitoring@host.name'
+  smtp_smarthost: 'mx.host.name:25'
+  smtp_require_tls: false
+  telegram_api_url: "https://api.telegram.org"
+
+templates:
+  - '/config/*.tmpl'
+
+time_intervals:
+  - name: business-hours
+    time_intervals:
+      - weekdays: ["monday:friday"]
+        times:
+          - start_time: "07:00"
+            end_time:   "22:00"
+        location: Europe/Moscow
+
+receivers:
+  - name: blackhole
+
+  - name: 'mail'
+    email_configs:
+      - send_resolved: true
+        to: 'j.doe@host.name'
+
+  - name: telegram
+    telegram_configs:
+      - send_resolved: true
+        chat_id: -1000000000001
+        bot_token: 0000000000:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        api_url: "https://api.telegram.org"
+        parse_mode: HTML
+        message: '{{ template "telegram.default" . }}'
+
+  - name: telegram_debug
+    telegram_configs:
+      - send_resolved: true
+        chat_id: -1000000000002 # test channel
+        bot_token: 0000000000:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        api_url: "https://api.telegram.org"
+        parse_mode: HTML
+        message: '{{ template "telegram.default" . }}'
+
+
+route:
+  group_by: ['...']
+  group_wait: 5s
+  group_interval: 5s
+  repeat_interval: 2h
+  receiver: telegram
+  routes:
+    - receiver: blackhole
+      matchers:
+      - alertname="Watchdog"
+
+    - receiver: 'mail'
+      group_by: [ alertname ]
+      repeat_interval: 4h
+
+    - receiver: telegram
+      matchers:
+      - severity="warning"
+    
+    - receiver: telegram
+      repeat_interval: 1h
+      matchers:
+      - severity="critical"
