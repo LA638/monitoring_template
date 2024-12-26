@@ -1,5 +1,5 @@
-## Docker compose template 
-for monitoring with Prometheus + Telegraf + Alertmanager + Grafana stack
+## Docker compose template
+For monitoring your cloud providers' billing accounts and services with Prometheus + Telegraf + Alertmanager + Grafana stack
 ### Create .env file
 ```
 NSTANCE_NAME=mon.company.name
